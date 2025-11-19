@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+
+# Virtual environment
+.venv/
+venv/
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.sqlite3
+*.db
+*.db-journal
+
+# IDE / Editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Packages
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Secrets
+config.env
+config_secret.yaml
+bot/

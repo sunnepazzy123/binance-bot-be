@@ -1,0 +1,16 @@
+[project]
+name = "binance-bot-be"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "bcrypt>=5.0.0",
+    "fastapi>=0.121.2",
+    "peewee>=3.18.3",
+    "peewee-async>=1.2.1",
+    "psycopg2-binary>=2.9.11",
+    "pydantic[email]>=2.12.4",
+    "python-jose[cryptography]>=3.5.0",
+    "uvicorn[standard]>=0.38.0",
+]
