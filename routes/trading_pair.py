@@ -41,8 +41,9 @@ async def get_symbol_pair(symbol: str, request: Request):
         
 
 @router.post("/", response_model=TradingPairRead)
-async def create_trading_pair(dto: TradingPairCreate):
+async def create_trading_pair(dto: TradingPairCreate, request: Request):
     try:
+        dto.user = request.state.user
         new_trade_pair = await run_sync(lambda: TradingPair.upsert_trading_pair(dto))
         return TradingPairRead.model_validate(new_trade_pair)
     except Exception as e:

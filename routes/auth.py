@@ -36,7 +36,6 @@ async def auth_user(user_login: UserLogin, response: Response):
                 return {
                     "access_token": token
                 }
-      
             else:
                 raise HTTPException(status_code=401, detail="Invalid Email or Password.")
             
@@ -44,6 +43,7 @@ async def auth_user(user_login: UserLogin, response: Response):
             if isinstance(e, DoesNotExist):
                 raise HTTPException(status_code=400, detail=f"User does not exist..")
             raise raise_format_error(e, "An error occurred during authentication.")
+
 
 @router.post("/register", response_model=UserRead)
 async def create_user(dto: UserCreate):

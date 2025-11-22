@@ -6,14 +6,14 @@ from dto.trading_pairs import TradingPairCreate
 from models.index import BaseModel
 from models.user import User
 from connection.index import database
-from utils.index import raise_format_error
 
 
 class TradingPair(BaseModel):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     symbol = CharField(unique=True)
     quote = CharField()
-    threshold = FloatField(default=0.98)
+    buy_threshold = FloatField(default=0.98)
+    sell_threshold = FloatField(default=0.98)
     quantity = FloatField(default=0.0)
     window = IntegerField(default=10)
     cooldown_seconds = IntegerField(default=300)
@@ -67,7 +67,7 @@ class TradingPair(BaseModel):
         
         with database.atomic():
             try:
-                new_trading_pair = cls.create(trading_pair_dto)
+                new_trading_pair = cls.create(**trading_pair_dto)
                 return new_trading_pair.__data__
             except Exception as e:
                 raise HTTPException(status_code=400, detail=e)

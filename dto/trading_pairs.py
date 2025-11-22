@@ -1,11 +1,17 @@
-from typing import Optional
+import asyncio
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Dict, List, Optional
 from uuid import UUID
 from pydantic import BaseModel, Field
+import pandas as pd
+from binance import AsyncClient
 
 class TradingPairCreate(BaseModel):
     symbol: str = Field(..., example="BTCUSDT")                # Trading pair
     quote: str = Field(..., example="USDT")                   # Quote currency
-    threshold: float = Field(..., example=0.98)               # Buy threshold
+    buy_threshold: float = Field(..., example=0.98)               # Buy threshold
+    sell_threshold: float = Field(..., example=1.02)               # Sell threshold
     quantity: float = Field(..., example=0.1)                 # Trade quantity
     window: int = Field(..., example=10)                      # Window size for signals
     cooldown_seconds: int = Field(..., example=300)           # Cooldown between trades
@@ -15,11 +21,12 @@ class TradingPairCreate(BaseModel):
     user: Optional[str] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "symbol": "BTCUSDT",
                 "quote": "USDT",
-                "threshold": 0.98,
+                "buy_threshold": 0.98,
+                "sell_threshold": 1.02,
                 "quantity": 0.1,
                 "window": 10,
                 "cooldown_seconds": 300,
@@ -36,7 +43,8 @@ class TradingPairRead(BaseModel):
     user: UUID
     symbol: str
     quote: str
-    threshold: float
+    buy_threshold: float
+    sell_threshold: float
     quantity: float
     window: int
     cooldown_seconds: int
@@ -45,14 +53,31 @@ class TradingPairRead(BaseModel):
     max_volatility: float
     
 
-class TradingPairLookup(BaseModel):
-    id: Optional[UUID] = None
-    symbol: Optional[str] = None
-
-    def to_param(self) -> dict:
-        if self.id:
-            return {"id": self.id}
-        if self.symbol:
-            return {"symbol": self.symbol}
-        raise ValueError("Either id or symbol must be provided")
+@dataclass
+class StreamParams:
+    """Holds all shared parameters for the Binance WebSocket stream."""
+    symbol: str
+    quote: str
+    quantity: float
+    buy_threshold: float
+    sell_threshold: float
+    price_data: pd.DataFrame
+    window: int
+    cooldown_seconds: int
+    client: AsyncClient
+    stop_streaming_flag: Dict[str, bool]
+    active_tasks: List[asyncio.Task] = field(default_factory=list)
+    config: Dict = field(default_factory=dict)
+    max_volatility: float = 0.02  # ✅ also fixed here
+    current_price: float = None
+    last_trade_time: datetime = None  # keeps track of the last executed trade
+    user: str = None
     
+@dataclass
+class TradeOrderInfo:
+    base: str
+    quantity: float
+    current_price: float
+    avg_price: float
+    percent_change: float   # positive value, works for buy or sell
+    side: str               # 'BUY' or 'SELL'
