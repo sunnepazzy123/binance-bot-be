@@ -59,6 +59,7 @@ async def start_bot_dynamic(body: TradingPairCreate):
             price_data=price_data,
             client=client,
             stop_streaming_flag=stop_flag,
+            balance=balance[body.quote],
             window=trading_pair["window"],
             cooldown_seconds=trading_pair["cooldown_seconds"],
             active_tasks=[],
@@ -66,7 +67,6 @@ async def start_bot_dynamic(body: TradingPairCreate):
             max_volatility=trading_pair["max_volatility"],
             user=trading_pair["user"],
             last_trade_time=None,  # Track last trade
-            balance=1000.0
         )
         # rolling buffer for recent prices (fast mean/volatility calc)
         # will contain floats, maintain up to params.window items
@@ -200,7 +200,7 @@ async def evaluate_trade_signals(params: StreamParams, recent_buffer: deque):
 
 
 
-def calculate_volatility_and_print(params, current_price, timestamp):
+def calculate_volatility_and_print(params: StreamParams, current_price: float, timestamp):
     """
     Calculate price volatility, determine color, print the update, and update current_price.
     """
