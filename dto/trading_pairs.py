@@ -66,6 +66,7 @@ class StreamParams:
     cooldown_seconds: int
     client: AsyncClient
     stop_streaming_flag: Dict[str, bool]
+    balance: float
     active_tasks: List[asyncio.Task] = field(default_factory=list)
     config: Dict = field(default_factory=dict)
     max_volatility: float = 0.02  # ✅ also fixed here

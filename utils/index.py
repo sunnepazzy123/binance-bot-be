@@ -1,7 +1,16 @@
 import asyncio
+import base64
+import hashlib
 from peewee import DoesNotExist
 from fastapi import HTTPException
 from pydantic import ValidationError
+from cryptography.fernet import Fernet
+from config.env_config import configLoaded
+
+# Convert to 32-byte key using SHA256, then base64-encode
+key_32 = base64.urlsafe_b64encode(hashlib.sha256(configLoaded.MASTER_KEY.encode()).digest())
+
+fernet = Fernet(key_32)
 
 
 async def run_sync(func, *args, **kwargs):
@@ -26,3 +35,10 @@ def raise_format_error(e: ValidationError, title: str = '') -> str:
         # Handle generic exceptions
         raise HTTPException(status_code=400, detail=f"{title} Error: {str(e)}")
 
+
+
+def encrypt_secret(secret: str) -> str:
+    return fernet.encrypt(secret.encode()).decode()
+
+def decrypt_secret(encrypted: str) -> str:
+    return fernet.decrypt(encrypted.encode()).decode()

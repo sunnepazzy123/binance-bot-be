@@ -11,7 +11,7 @@ from models.trading_pair import TradingPair
 from third_party.binance.binance import connect_binance, get_account_balance
 from config.env_config import configLoaded
 from third_party.binance.helpers.print import price_color, print_price_update, print_trade_order
-from third_party.binance.util import init_price_dataframe, is_market_stable
+from third_party.binance.util import calculate_quantity, get_current_price, init_price_dataframe, is_market_stable
 from binance import BinanceSocketManager
 from collections import deque
 from third_party.binance.config import bot_status
@@ -65,7 +65,8 @@ async def start_bot_dynamic(body: TradingPairCreate):
             config=trading_pair,
             max_volatility=trading_pair["max_volatility"],
             user=trading_pair["user"],
-            last_trade_time=None  # Track last trade
+            last_trade_time=None,  # Track last trade
+            balance=1000.0
         )
         # rolling buffer for recent prices (fast mean/volatility calc)
         # will contain floats, maintain up to params.window items
@@ -230,17 +231,24 @@ async def execute_order(params: StreamParams, current_price: float, avg_price: f
     print_trade_order(info)
 
     try:
+        quantity = await calculate_quantity(
+            client=params.client,
+            symbol=params.symbol,
+            balance=params.balance,
+            allocation_percent=10,
+            price=params.current_price,
+        )
         if side == OrderSide.BUY.value:
-            order = await params.client.order_market_buy(symbol=params.symbol, quantity=params.quantity)
+            order = await params.client.order_market_buy(symbol=params.symbol, quantity=quantity)
         else:
-            order = await params.client.order_market_sell(symbol=params.symbol, quantity=params.quantity)
+            order = await params.client.order_market_sell(symbol=params.symbol, quantity=quantity)
 
         order_dto = OrderCreate(
             symbol=params.symbol,
             side=side,
             price=current_price,
             avg_price=avg_price,
-            quantity=params.quantity,
+            quantity=quantity,
             percent_change=abs(percent_change),
             threshold=params.buy_threshold if side == OrderSide.BUY.value else params.sell_threshold,
             user=str(params.user)

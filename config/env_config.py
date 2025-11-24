@@ -10,6 +10,7 @@ class EnvConfig:
     TEST_SECRET_KEY: str
     JWT_SECRET: str
     ENVIRONMENT: str
+    MASTER_KEY: str
 
     @classmethod
     def load(cls) -> "EnvConfig":
@@ -20,7 +21,8 @@ class EnvConfig:
             "TEST_API_KEY": os.getenv("TEST_API_KEY"),
             "TEST_SECRET_KEY": os.getenv("TEST_SECRET_KEY"),
             "JWT_SECRET": os.getenv("JWT_SECRET"),
-            "ENVIRONMENT": os.getenv("ENVIRONMENT")
+            "ENVIRONMENT": os.getenv("ENVIRONMENT"),
+            "MASTER_KEY": os.getenv("MASTER_KEY")
         }
 
         # Detect missing or empty values
@@ -39,7 +41,8 @@ class EnvConfig:
             TEST_API_KEY=required_keys["TEST_API_KEY"],
             TEST_SECRET_KEY=required_keys["TEST_SECRET_KEY"],
             JWT_SECRET=required_keys["JWT_SECRET"],
-            ENVIRONMENT=required_keys["ENVIRONMENT"]
+            ENVIRONMENT=required_keys["ENVIRONMENT"],
+            MASTER_KEY=required_keys["MASTER_KEY"]
         )
 
 configLoaded = EnvConfig.load()

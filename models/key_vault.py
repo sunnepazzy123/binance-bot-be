@@ -2,26 +2,22 @@ from datetime import datetime
 from typing import List
 import uuid
 from fastapi import HTTPException
-from peewee import CharField, UUIDField, FloatField, ForeignKeyField, DateTimeField
-from dto.order import OrderCreate
+from peewee import CharField, UUIDField, ForeignKeyField, DateTimeField
+from dto.key_vault import APIKeyCreate
 from models.index import BaseModel
 from models.user import User
 from connection.index import database
+from utils.index import decrypt_secret, encrypt_secret
 
 
-class Order(BaseModel):
+class KeyVault(BaseModel):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
-    symbol = CharField()
-    side = CharField()
-    price = FloatField()
-    quantity = FloatField()
-    avg_price = FloatField()
-    threshold = FloatField()
-    percent_change = FloatField()
-    timestamp = DateTimeField(default=datetime.utcnow)
-    result = CharField(default="success")
+    api_key = CharField()
+    api_secret = CharField()
+    environment = CharField()
+    created_at = DateTimeField(default=datetime.utcnow)
     # One-to-many relation (User → TradingPairs)
-    user = ForeignKeyField(User, backref="orders", on_delete="CASCADE")
+    user = ForeignKeyField(User, backref="keyvault", on_delete="CASCADE")
     
     # --- READ ALL ---
     @classmethod
@@ -36,14 +32,20 @@ class Order(BaseModel):
 
     # --- CREATE ---
     @classmethod
-    def create_order(cls, dto: OrderCreate) -> dict:
+    def create_keyVault(cls, dto: APIKeyCreate) -> dict:
         
-        order_copy = dto.model_dump()
+        # Encrypt and store in DTO
+        dto.api_key = encrypt_secret(dto.api_key)
+        dto.api_secret = encrypt_secret(dto.api_secret)
+
+        # ✅ Decrypt the same value that was stored
+        print(decrypt_secret(dto.api_secret))
+        dto_copy = dto.model_dump()
         
         with database.atomic():
             try:
-                order_created = cls.create(**order_copy)
-                return order_created.__data__
+                keyvault_created = cls.create(**dto_copy)
+                return keyvault_created.__data__
             except Exception as e:
                 raise HTTPException(status_code=400, detail=e)
                 

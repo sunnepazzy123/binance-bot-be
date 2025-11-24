@@ -1,7 +1,10 @@
+import decimal
+import math
 from colorama import Fore
 import numpy as np
 import pandas as pd
 from config.index import MAX_VOLATILITY
+from binance import AsyncClient
 
 
 
@@ -46,3 +49,44 @@ def is_market_stable(recent_prices: list, symbol: str = None) -> bool:
             + Fore.RESET
         )
     return volatility < MAX_VOLATILITY
+
+
+
+async def calculate_quantity(client, symbol: str, balance: float, allocation_percent: float, price: float):
+    step_size = await get_step_size(client, symbol)
+
+    # Convert percent (example: 10 → 0.10)
+    usable_balance = balance * (allocation_percent / 100)
+
+    # Unrounded quantity
+    raw_qty = usable_balance / price
+
+    # Apply Binance step size rules
+    qty = apply_step_size(raw_qty, step_size)
+
+    return qty
+
+
+
+async def get_step_size(client: AsyncClient, symbol: str) -> float:
+    info = await client.get_symbol_info(symbol)
+
+    for f in info["filters"]:
+        if f["filterType"] == "LOT_SIZE":
+            return float(f["stepSize"])
+
+    raise ValueError(f"Step size not found for {symbol}")
+
+
+def apply_step_size(quantity: float, step_size: float) -> float:
+    decimals = abs(decimal.Decimal(str(step_size)).as_tuple().exponent)
+    q = math.floor(quantity / step_size) * step_size
+    return float(f"{q:.{decimals}f}")
+
+
+async def get_current_price(client: AsyncClient, symbol: str) -> float:
+    """
+    Fetch latest market price using Binance ticker API.
+    """
+    ticker = await client.get_symbol_ticker(symbol=symbol)
+    return float(ticker["price"])

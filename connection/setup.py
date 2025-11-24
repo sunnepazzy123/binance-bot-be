@@ -1,5 +1,6 @@
 from sqlite3 import OperationalError
 from playhouse.postgres_ext import PostgresqlExtDatabase
+from models.key_vault import KeyVault
 from models.order import Order
 from models.price import Price
 from models.trading_pair import TradingPair
@@ -9,7 +10,7 @@ def create_tables(db: PostgresqlExtDatabase):
     if is_connection_active(db):
         print("Connection is active. Creating tables if they don't exist...")
         
-        tables = [User, TradingPair, Order, Price]
+        tables = [User, TradingPair, Order, KeyVault, Price]
         
         for table in tables:
             if not db.table_exists(table._meta.table_name):
