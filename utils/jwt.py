@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import uuid
-from fastapi import Depends, HTTPException, Security
+from fastapi import HTTPException, Security
 from fastapi.security import HTTPBearer
 from jose import jwt
 

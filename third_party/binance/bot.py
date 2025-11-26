@@ -11,7 +11,7 @@ from models.trading_pair import TradingPair
 from third_party.binance.binance import connect_binance, get_account_balance
 from config.env_config import configLoaded
 from third_party.binance.helpers.print import price_color, print_price_update, print_trade_order
-from third_party.binance.util import calculate_quantity, get_current_price, init_price_dataframe, is_market_stable
+from third_party.binance.util import calculate_quantity, init_price_dataframe, is_market_stable
 from binance import BinanceSocketManager
 from collections import deque
 from third_party.binance.config import bot_status
@@ -44,6 +44,7 @@ async def start_bot_dynamic(body: TradingPairCreate):
             return
         
         balance = await get_account_balance(client, body.quote)
+        print(Fore.YELLOW + "====start_bot_dynamic start print here ====")
         print(Fore.GREEN + f"💰 {body.quote} balance: {balance}")
         
         # state & params
@@ -114,6 +115,7 @@ async def start_bot_dynamic(body: TradingPairCreate):
                                 # if trade executed you may want to trigger cooldowns, notifications, etc.
                                 bot_status[symbol.upper()]["last_trade"] = datetime.utcnow()
                             logger.info("%s executed trade for %s", Fore.GREEN, params.symbol)
+                            
                         except Exception as e:
                             # signal eval should never crash the loop
                             logger.exception("Error in evaluate_trade_signals: %s", e)
@@ -162,7 +164,6 @@ def add_current_price_to_params(msg: dict, params: StreamParams, recent_buffer: 
     return params
 
 
-
 # === SIGNAL CHECK ===
 async def evaluate_trade_signals(params: StreamParams, recent_buffer: deque):
     current_price = params.current_price
@@ -195,6 +196,8 @@ async def evaluate_trade_signals(params: StreamParams, recent_buffer: deque):
     # --- SELL ---
     if current_price > avg_price * params.sell_threshold:
         executed = await execute_order(params, current_price, avg_price, percent_change, OrderSide.SELL.value)
+        
+    print(Fore.YELLOW + "====end_bot_dynamic end successful print here ====")
 
     return executed
 

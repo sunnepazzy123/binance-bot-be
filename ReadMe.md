@@ -88,6 +88,9 @@ Whenever `/bot/start` is called:
 ---
 
 ## 🔧 Installation (Local)
+```
+uvicorn main:app --reload
+```
 
 ### 1️⃣ Clone & Setup Virtual Environment
 

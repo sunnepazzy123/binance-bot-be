@@ -23,8 +23,15 @@ async def connect_binance(api_key: str, api_secret: str, environment: str = "tes
                 await asyncio.sleep(delay)
     return None, None
 
+
+
 async def get_account_balance(client: AsyncClient, asset: str):
-    """Return balance for a specific asset"""
+
     info = await client.get_account()
+    # Build a dictionary of all balances
     balances = {item["asset"]: float(item["free"]) for item in info["balances"]}
-    return {asset: balances.get(asset, 0.0)}
+    
+    return {
+        asset: balances.get(asset, 0.0),
+        "USDT": balances.get("USDT", 0.0)
+    }

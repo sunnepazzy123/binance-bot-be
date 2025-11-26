@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from models.user import User
 from dto.user import UserRead, UserUpdate
 from utils.auth import get_current_user
@@ -21,6 +21,19 @@ async def get_users():
         return [UserRead.model_validate(u) for u in users]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching users: {e}")
+    
+    
+# Route to get all users
+@router.get("/profile", response_model=UserRead)
+async def get_profile(request: Request):
+    try:
+        user_id = request.state.user
+        user = await run_sync(lambda: User.findOne(user_id))
+        # Convert each dict to Pydantic UserRead
+        return UserRead.model_validate(user)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching user profile: {e}")
+
 
 # --- UPDATE USER ---
 @router.patch("/{id}", response_model=UserRead)

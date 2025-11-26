@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI 
 from connection.setup import create_tables
+from middlewares.setup_cors import setup_cors
 from swagger.index import custom_openapi
 from connection.index import database
 from middlewares.index import log_requests
@@ -28,6 +29,9 @@ async def lifespan(app: FastAPI):
 
 # Initializing the
 app = FastAPI(lifespan=lifespan)
+
+# Setup CORS using the function
+setup_cors(app)  # or use ["*"] for all
 
 app.middleware('http')(log_requests)
 app.openapi = lambda: custom_openapi(app)

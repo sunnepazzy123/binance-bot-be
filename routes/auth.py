@@ -46,9 +46,24 @@ async def auth_user(user_login: UserLogin, response: Response):
 
 
 @router.post("/register", response_model=UserRead)
-async def create_user(dto: UserCreate):
+async def create_user(dto: UserCreate, response: Response):
     try:
         new_user = await run_sync(lambda: User.create_user(dto))
+        data = {
+            "id": new_user["id"],
+            "email": new_user["email"]
+        }
+                        # jwt goes here          
+        token = create_token(data)
+        # Set HTTP-only cookie
+        response.set_cookie(
+            key="access_token",
+            value=token,
+            httponly=True,
+            max_age=ACCESS_TOKEN_EXPIRE_MINUTES*60,
+            samesite="lax",  # or "strict"
+            secure=False  # True if using HTTPS
+        )
         return UserRead.model_validate(new_user)
     except Exception as e:
         raise raise_format_error(e)

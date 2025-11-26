@@ -57,8 +57,9 @@ async def start_bot(dto: TradingPairCreate, request: Request):
         raise_format_error(e)
         
 @router.get("/status/{symbol}")
-async def get_recent_prices(symbol: str,):
-    try:
-        return bot_status[symbol]
-    except Exception as e:
-        raise_format_error(e)
+async def get_recent_prices(symbol: str):
+    # Check if the symbol exists in bot_status
+    status = bot_status.get(symbol)
+    if status is None:
+        return {"status": "not running", "symbol": symbol}
+    return status
