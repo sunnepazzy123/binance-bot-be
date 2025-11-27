@@ -4,8 +4,9 @@ from connection.setup import create_tables
 from middlewares.setup_cors import setup_cors
 from swagger.index import custom_openapi
 from connection.index import database
-from middlewares.index import log_requests
+from middlewares.index import HTTPSRedirectFixMiddleware, log_requests
 from routes.index import register_routers
+
 
                   
 # Defining the lifespan context manager
@@ -28,7 +29,14 @@ async def lifespan(app: FastAPI):
         database.close()
 
 # Initializing the
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    docs_url="/api/docs",          # Swagger docs
+    openapi_url="/api/openapi.json" # OpenAPI JSON
+    )
+
+# FIX: Proper HTTPS handling behind NGINX
+app.add_middleware(HTTPSRedirectFixMiddleware)
 
 # Setup CORS using the function
 setup_cors(app)  # or use ["*"] for all

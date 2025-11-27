@@ -1,6 +1,9 @@
 version: "3.9"
 
 services:
+  # ------------------------------
+  # PostgreSQL Database
+  # ------------------------------
   postgres:
     image: postgres:15
     container_name: postgres
@@ -14,17 +17,51 @@ services:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+  # ------------------------------
+  # Backend: FastAPI (production)
+  # ------------------------------
+  backend:
+    image: vibratewarsaw/darkmind-bot-be:latest   # path to your FastAPI backend
+    container_name: backend
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
     ports:
-      - "8080:80"
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: 1
+      DB_NAME: fastapi_db
+      DB_USER: sunny
+      DB_PASSWORD: sunny
+      DB_HOST: localhost
+      DB_PORT: 5432
+      SECRET_KEY: "your_secret_key"
+      ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      TEST_API_KEY: QkbBoRzAbCtpBEqDzFZDXOgFZCBb9RRIS0xYcJpvsSxi4B7iau0qdgeHNRKLoned
+      TEST_SECRET_KEY: J70OvFnwTlDmIlbMSSRXRdG19vFDL3STV2AKOyHDjSO23KZs4w4mWlTrxXj4Ps5n
+      ENVIRONMENT: development
+      JWT_SECRET: sunny
+      MASTER_KEY: sunny
     depends_on:
       - postgres
     restart: unless-stopped
 
+  # ------------------------------
+  # Frontend: Next.js (production)
+  # ------------------------------
+  frontend:
+    image: vibratewarsaw/darkmind-bot-fe:latest  # path to your Next.js frontend
+    container_name: frontend
+    command: ["npm", "start"]
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: https://darkmindbot.com/api
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+# ------------------------------
+# Persistent volumes
+# ------------------------------
 volumes:
   pgdata:

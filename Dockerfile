@@ -1,40 +1,49 @@
 # ------------------------------
-# Production Dockerfile for FastAPI
+# 1️⃣ Base image
 # ------------------------------
-
-# Use official slim Python image
 FROM python:3.12-slim
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    PATH="/app/.venv/bin:$PATH"
-
-# Set working directory
+# ------------------------------
+# 2️⃣ Set working directory
+# ------------------------------
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential \
-        curl \
-        && rm -rf /var/lib/apt/lists/*
+# ------------------------------
+# 3️⃣ Install system dependencies
+# ------------------------------
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy only dependencies to leverage Docker cache
-COPY requirements.txt .
+# ------------------------------
+# 4️⃣ Copy dependency files and README
+# ------------------------------
+COPY pyproject.toml uv.lock README.md ./
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# ------------------------------
+# 5️⃣ Install Poetry and dependencies system-wide
+# ------------------------------
+RUN pip install --no-cache-dir "poetry>=1.5.1" \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-root --no-interaction --no-ansi
 
-# Copy application code
+# ------------------------------
+# 6️⃣ Copy application source code
+# ------------------------------
 COPY . .
 
-# Use non-root user for security
-RUN useradd -m appuser && chown -R appuser /app
-USER appuser
+# ------------------------------
+# 7️⃣ Set environment variables
+# ------------------------------
+ENV PYTHONUNBUFFERED=1
 
-# Expose port
+# ------------------------------
+# 8️⃣ Expose port
+# ------------------------------
 EXPOSE 8000
 
-# Production entrypoint using Gunicorn + Uvicorn workers
-CMD ["gunicorn", "run:app", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120"]
+# ------------------------------
+# 9️⃣ Run FastAPI
+# ------------------------------
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

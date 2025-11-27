@@ -3,6 +3,8 @@ import time
 from utils.jwt import verify_token
 from fastapi import Request, HTTPException
 from functools import wraps
+from starlette.middleware.base import BaseHTTPMiddleware
+
 
 
 async def log_requests(request: Request, call_next):
@@ -97,3 +99,11 @@ def role_middleware(required_role: str = None):
 
 
 
+
+
+class HTTPSRedirectFixMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        # Force FastAPI to treat requests as HTTPS when behind NGINX reverse proxy
+        if request.headers.get("x-forwarded-proto") == "https":
+            request.scope["scheme"] = "https"
+        return await call_next(request)

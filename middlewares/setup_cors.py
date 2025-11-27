@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 def setup_cors(app: FastAPI, origins: list[str] = None):
     if origins is None:
-        origins = ["*"]  # Allow all origins by default
+        origins = ["https://darkmindbot.com", "http://localhost:3000"]
 
     app.add_middleware(
         CORSMiddleware,
