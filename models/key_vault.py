@@ -8,7 +8,7 @@ from models.index import BaseModel
 from models.user import User
 from connection.index import database
 from utils.index import decrypt_secret, encrypt_secret
-
+from peewee import BooleanField
 
 class KeyVault(BaseModel):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -16,6 +16,9 @@ class KeyVault(BaseModel):
     api_secret = CharField()
     environment = CharField()
     created_at = DateTimeField(default=datetime.utcnow)
+    # New columns
+    status = CharField(max_length=50, null=True, default="pending")
+    enabled = BooleanField(null=True, default=True)
     # One-to-many relation (User → TradingPairs)
     user = ForeignKeyField(User, backref="keyvault", on_delete="CASCADE")
     

@@ -15,6 +15,7 @@ class User(BaseModel):
     email = CharField(unique=True)
     password = CharField(null=True, default=None)   # ⬅️ allow NULL
     picture = CharField(null=True, default=None)   # ⬅️ allow NULL
+    provider = CharField(null=True, default=None)
     
 
     # --- READ ALL ---
