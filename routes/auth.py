@@ -1,15 +1,59 @@
-from fastapi import APIRouter, HTTPException, Response
-from dto.user import UserCreate, UserLogin, UserRead
+import os
+from fastapi import APIRouter, HTTPException, Request, Response
+from dto.user import GoogleIdTokenPayload, UserCreate, UserLogin, UserRead
 from models.user import User
 from utils.auth import  verify_password
 from utils.index import raise_format_error, run_sync
 from utils.jwt import ACCESS_TOKEN_EXPIRE_MINUTES, create_token
 from peewee import DoesNotExist
+from authlib.integrations.starlette_client import OAuth
+from config.env_config import configLoaded
 
 router = APIRouter(
     tags=["Auth"],
     prefix="/auth",
 )
+
+oauth = OAuth()
+
+oauth.register(
+    name="google",
+    client_id=configLoaded.GOOGLE_CLIENT_ID,
+    client_secret=configLoaded.GOOGLE_CLIENT_SECRET,
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"},
+)
+
+@router.get("/google")
+async def google_login(request: Request):
+    redirect_uri = request.url_for("google_callback")
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@router.get("/google/callback")
+async def google_callback(request: Request, response: Response):
+    token = await oauth.google.authorize_access_token(request)
+    userinfo = token["userinfo"]
+    payload = GoogleIdTokenPayload(**userinfo)
+    new_user = await run_sync(lambda: User.upsert_google_user(payload))
+
+    data = {
+        "id": new_user["id"],
+        "email": new_user["email"]
+    }
+                    # jwt goes here          
+    token = create_token(data)
+    # Set HTTP-only cookie
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES*60,
+        samesite="lax",  # or "strict"
+        secure=False  # True if using HTTPS
+    )
+    return new_user
+
 
 
 @router.post("/login")

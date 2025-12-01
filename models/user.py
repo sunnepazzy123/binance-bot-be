@@ -3,7 +3,7 @@ from typing import List
 import uuid
 from fastapi import HTTPException
 from peewee import CharField, UUIDField
-from dto.user import UserCreate, UserUpdate
+from dto.user import GoogleIdTokenPayload, UserCreate, UserUpdate
 from models.index import BaseModel
 from utils.auth import hash_password
 from utils.index import raise_format_error
@@ -13,7 +13,9 @@ class User(BaseModel):
     first_name = CharField()
     last_name = CharField()
     email = CharField(unique=True)
-    password = CharField()
+    password = CharField(null=True, default=None)   # ⬅️ allow NULL
+    picture = CharField(null=True, default=None)   # ⬅️ allow NULL
+    
 
     # --- READ ALL ---
     @classmethod
@@ -89,3 +91,35 @@ class User(BaseModel):
                 return {"detail": "User deleted successfully"}
             except Exception as e:
                 raise_format_error(e, "deleting user")
+                
+    # --- UPSERT ---
+    @classmethod
+    def upsert_google_user(cls, userinfo: GoogleIdTokenPayload) -> dict:
+        try:
+            user, created = cls.get_or_create(
+                email=userinfo.email,
+                defaults={
+                    "first_name": userinfo.given_name,
+                    "last_name": userinfo.family_name,
+                    "password": None,
+                    "picture": userinfo.picture,
+                },
+            )
+
+            if not created:
+                updated = False
+                if not user.first_name:
+                    user.first_name = userinfo.given_name
+                    updated = True
+                if not user.last_name:
+                    user.last_name = userinfo.family_name
+                    updated = True
+                if not user.picture:
+                    user.picture = userinfo.picture
+                    updated = True
+                if updated:
+                    user.save()
+
+            return user.__data__  # ✅ Return dict for API
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"User upsert failed: {e}")

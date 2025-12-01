@@ -1,12 +1,11 @@
 from peewee import PostgresqlDatabase
-from constant.index import DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER
-
+from config.env_config import configLoaded
 
 # Initialize the PostgreSQL database connection using env vars
 database = PostgresqlDatabase(
-    DB_NAME,
-    user=DB_USER,
-    password=DB_PASSWORD,
-    host=DB_HOST,
-    port=DB_PORT
+    configLoaded.DB_NAME,
+    user=configLoaded.DB_USER,
+    password=configLoaded.DB_PASSWORD,
+    host=configLoaded.DB_HOST,
+    port=configLoaded.DB_PORT
 )
