@@ -8,6 +8,16 @@ class APIKeyCreate(BaseModel):
     api_key: str = Field(..., example="vdgsdgs62bnn2283829")
     api_secret: str = Field(..., example="vdgsdgs62bnn2283829")
     environment: str = Field(..., example="development")
+    
+    
+class APIKeyUpdate(BaseModel):
+    user: Optional[str] = None
+    api_key: Optional[str] = None
+    api_secret: Optional[str] = None
+    environment: Optional[str] = None
+    status: Optional[str] = None
+    enabled: Optional[bool] = None
+
 
 class APIKeyRead(BaseModel):
     id: UUID
@@ -16,3 +26,5 @@ class APIKeyRead(BaseModel):
     api_secret: str
     environment: str
     created_at: datetime
+    status: str
+    enabled: bool
