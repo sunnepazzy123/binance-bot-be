@@ -45,7 +45,7 @@ async def update_api_key(id: UUID, dto: APIKeyUpdate, request: Request):
 
 # Get all keys for a user
 @router.get("/", response_model=List[APIKeyRead])
-async def get_trading_pair(request: Request):
+async def get_key_vault_key(request: Request):
     try:
         user = request.state.user
         keyvaults = await run_sync(lambda: KeyVault.findAllByUser(user))

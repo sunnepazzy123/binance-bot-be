@@ -15,7 +15,7 @@ router = APIRouter(
 
         
 @router.get("/{symbol}")
-async def get_recent_prices(symbol: str, request: Request):
+async def get_accounts(symbol: str, request: Request):
     try:
         client, _ = await connect_binance(
             api_key=configLoaded.TEST_API_KEY,
